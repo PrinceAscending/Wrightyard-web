@@ -40,42 +40,42 @@
 **Interfaces:**
 - Produces: CI that runs site `npm ci`, `npm run typecheck`, `npm run build`; bot CI in `bot/` with `npm ci`, `npm run typecheck`, `npm run build`.
 
-- [ ] Add `"engines": { "node": "22.x" }` to the root package.
-- [ ] Add `.nvmrc` containing `22`.
-- [ ] Add `.vercelignore` excluding bot runtime, dependencies, builds, and env files.
-- [ ] Add GitHub Actions CI with separate site and bot jobs.
-- [ ] Update README deployment section with the production URL and post-launch rotation note.
+- [x] Add `"engines": { "node": "22.x" }` to the root package.
+- [x] Add `.nvmrc` containing `22`.
+- [x] Add `.vercelignore` excluding bot runtime, dependencies, builds, and env files.
+- [x] Add GitHub Actions CI with separate site and bot jobs.
+- [x] Update README deployment section with the production URL and post-launch rotation note.
 
 ### Task 2: Preflight and secret scan
 
-- [ ] Run `npm run typecheck` and `npm run build` at the root.
-- [ ] Run `npm run typecheck` and `npm run build` in `bot/`.
-- [ ] Confirm `git status --ignored` excludes `.env.local`, `bot/.env`, `node_modules`, `.next`, `bot/dist`.
-- [ ] Scan tracked candidates for credential-like strings.
-- [ ] Commit repository hardening.
-- [ ] Push `main` to `origin`.
+- [x] Run `npm run typecheck` and `npm run build` at the root.
+- [x] Run `npm run typecheck` and `npm run build` in `bot/`.
+- [x] Confirm `git status --ignored` excludes `.env.local`, `bot/.env`, `node_modules`, `.next`, `bot/dist`.
+- [x] Scan tracked candidates for credential-like strings.
+- [x] Commit repository hardening.
+- [x] Push `main` to `origin`.
 
 ### Task 3: Vercel project and environment
 
-- [ ] Install/link Vercel CLI.
-- [ ] Authenticate to Vercel.
-- [ ] Import/link `PrinceAscending/Wrightyard-web` as project `wrightyard`.
-- [ ] Add production env vars from `.env.local` without printing values.
-- [ ] Confirm `wrightyard.vercel.app` is assigned.
-- [ ] Run a production deployment.
+- [x] Install/link Vercel CLI.
+- [x] Authenticate to Vercel.
+- [x] Import/link `PrinceAscending/Wrightyard-web` as project `wrightyard`.
+- [x] Add production env vars from `.env.local` without printing values.
+- [x] Confirm `wrightyard.vercel.app` is assigned.
+- [x] Run a production deployment.
 - [ ] Connect the GitHub repository for automatic `main` deploys if not already connected.
 
 ### Task 4: Production OAuth
 
-- [ ] Add `https://wrightyard.vercel.app/api/auth/callback` to the Discord application.
-- [ ] Ensure `NEXT_PUBLIC_SITE_URL=https://wrightyard.vercel.app`.
-- [ ] Redeploy if the env was added after the first build.
-- [ ] Complete a real Discord sign-in against production.
+- [x] Add `https://wrightyard.vercel.app/api/auth/callback` to the Discord application.
+- [x] Ensure `NEXT_PUBLIC_SITE_URL=https://wrightyard.vercel.app`.
+- [x] Redeploy if the env was added after the first build.
+- [x] Complete a real Discord sign-in against production.
 
 ### Task 5: Production verification and handoff
 
 - [ ] Verify `/`, `/status`, `/dispatch`, `/login`, `/dashboard`, `/admin` at desktop and mobile widths.
-- [ ] Verify `/api/status` reports Mongo and the bot state correctly.
-- [ ] Verify unauthenticated `/dashboard` and `/admin` redirect.
-- [ ] Verify a brief submission path without leaving test data.
+- [x] Verify `/api/status` reports Mongo and the bot state correctly.
+- [x] Verify unauthenticated `/dashboard` and `/admin` redirect.
+- [x] Verify a brief submission path without leaving test data.
 - [ ] Record the deployment URL and remaining bot-host steps in README/report.
