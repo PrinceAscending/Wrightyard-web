@@ -1,7 +1,8 @@
 node_modules
 .next
 out
-bot
+# Root bot service only. Do not ignore app/api/bot.
+/bot
 .superpowers
 .env
 .env.*
