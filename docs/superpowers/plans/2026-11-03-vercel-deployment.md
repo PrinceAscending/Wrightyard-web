@@ -63,7 +63,7 @@
 - [x] Add production env vars from `.env.local` without printing values.
 - [x] Confirm `wrightyard.vercel.app` is assigned.
 - [x] Run a production deployment.
-- [ ] Connect the GitHub repository for automatic `main` deploys if not already connected.
+- [x] Connect the GitHub repository for automatic `main` deploys if not already connected.
 
 ### Task 4: Production OAuth
 
@@ -74,8 +74,8 @@
 
 ### Task 5: Production verification and handoff
 
-- [ ] Verify `/`, `/status`, `/dispatch`, `/login`, `/dashboard`, `/admin` at desktop and mobile widths.
+- [x] Verify `/`, `/status`, `/dispatch`, `/login`, `/dashboard`, `/admin` at desktop and mobile widths.
 - [x] Verify `/api/status` reports Mongo and the bot state correctly.
 - [x] Verify unauthenticated `/dashboard` and `/admin` redirect.
 - [x] Verify a brief submission path without leaving test data.
-- [ ] Record the deployment URL and remaining bot-host steps in README/report.
+- [x] Record the deployment URL and remaining bot-host steps in README/report.
