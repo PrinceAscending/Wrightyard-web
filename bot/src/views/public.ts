@@ -107,6 +107,12 @@ export function buildHelpEmbed(isOwner: boolean): EmbedBuilder {
     "**/help** — this index.",
   ].join("\n");
 
+  const bench = [
+    "**/ask** — ask the yard about the studio, services, or process.",
+    "**/brief** — turn a rough idea into a short project brief.",
+    "AI answers are drafts. A person confirms the details.",
+  ].join("\n");
+
   const gate = [
     "**/ticket** — open a private room with the studio.",
     "The public door lives in the ticket channel; one ticket at a time.",
@@ -117,7 +123,11 @@ export function buildHelpEmbed(isOwner: boolean): EmbedBuilder {
     .setTitle("The yard, in brief.")
     .setDescription("Everything the bot can do, kept short. The gate is staffed when the studio is awake.")
     .setColor(BRAND.colors.ink)
-    .addFields({ name: "The Yard", value: yard }, { name: "The Gate", value: gate })
+    .addFields(
+      { name: "The Yard", value: yard },
+      { name: "The Bench", value: bench },
+      { name: "The Gate", value: gate },
+    )
     .setFooter({ text: BRAND.footer })
     .setTimestamp();
 

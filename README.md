@@ -10,8 +10,9 @@ open.
 - **Website:** Next.js 16, React 19, Motion, custom letterpress CSS. Deployed to
   Vercel.
 - **Bot:** discord.js 14 gateway process. Deployed to a persistent host
-  (Railway, Fly, Render). Vercel functions cannot hold a 24/7 gateway
-  connection or rich presence.
+  (Pterodactyl, Railway, Fly, Render). Vercel functions cannot hold a 24/7
+  gateway connection or rich presence. `/ask` and `/brief` use Groq when
+  `GROQ_API_KEY` is set.
 - **Shared state:** MongoDB Atlas. The site and bot share durable state for the
   heartbeat, job book, ticket history, and dispatch archive. An in-memory
   fallback keeps local work possible when MongoDB is unavailable, but it is not
@@ -23,8 +24,9 @@ open.
 
 - **Website:** live at https://wrightyard.vercel.app. Pushes to `main` deploy
   production automatically.
-- **Bot:** code complete and locally verified; not yet hosted on a persistent
-  provider. See [Deploy the bot](#deploy-the-bot).
+- **Bot:** code complete, AI commands added, and packaged for Pterodactyl. The
+  local instance is the current bridge until the Pterodactyl server starts. See
+  [Deploy the bot](#deploy-the-bot).
 - **Shared state:** MongoDB Atlas is live and shared by both processes.
 - **Follow-up:** rotate credentials that were shared outside the hosting
   dashboards. See [Security notes](#security-notes).
@@ -43,7 +45,7 @@ open.
 | `app/api/bot/heartbeat` | Signed HMAC heartbeat receiver, override delivery, command sync flag |
 | `app/api/briefs` | Public job-brief intake with validation, honeypot, and rate limits |
 | `app/api/admin/*` | Owner-only presence, maintenance, announce, sync, audit, brief, and ticket APIs |
-| `bot/` | Standalone discord.js gateway bot, commands, tickets, presence rotation, heartbeat sender, Mongo ticket ledger |
+| `bot/` | Standalone discord.js gateway bot, commands, Groq `/ask` and `/brief`, tickets, presence rotation, heartbeat sender, Mongo ticket ledger |
 | `lib/` | Auth, guards, Discord REST, Mongo store, briefs, dispatch, tickets, status assembly, validation, formatting |
 | `app/account.css` | Auth, dashboard, status, admin, loading, and responsive styles |
 
@@ -194,20 +196,23 @@ Vercel and the bot host.
 
 ## Deploy the bot
 
-The bot must run on a persistent host. Railway is the shortest path:
+The bot must run on a persistent host. Pterodactyl is the current path:
 
-1. Create a Railway project from this repository.
-2. Set the service root to `bot/` (or use the included Dockerfile).
-3. Add the bot environment variables from `bot/.env.example`.
-4. Set `SITE_URL` to the production site origin.
-5. Set `BOT_HEARTBEAT_SECRET` to the exact same value used by Vercel.
-6. Deploy. Check `GET /health`.
-7. Run the command deploy once: `npm run deploy-commands` locally or as a
-   one-off service command.
-8. Confirm the site's `/status` page receives heartbeats and the bot's rich
+1. Create a Node.js server on Node 22.12+ with 1 GB RAM.
+2. Extract `wrightyard-bot-pterodactyl.zip` into the server root.
+3. Create `.env` from the values in `bot/.env.example`, including
+   `SITE_URL=https://wrightyard.vercel.app`, the exact Vercel
+   `BOT_HEARTBEAT_SECRET`, and `GROQ_API_KEY` for `/ask` and `/brief`.
+4. Set the startup command to `sh start.sh` (or `node dist/index.js`).
+5. Start the server. Check `GET /health` and the console for
+   `Gateway ready` and `Website heartbeat accepted`.
+6. Run `node dist/deploy-commands.js` once if the commands are missing.
+7. Confirm the site's `/status` page receives heartbeats and the bot's rich
    presence rotates.
 
-Fly.io and Render work the same way. `bot/Dockerfile`, `bot/railway.json`, and
+The full Pterodactyl walkthrough is in
+[`bot/README-PTERODACTYL.md`](bot/README-PTERODACTYL.md). Railway, Fly.io, and
+Render work the same way; `bot/Dockerfile`, `bot/railway.json`, and
 `bot/fly.toml` are included.
 
 The owner can also queue a command re-registration from `/admin` using
@@ -256,5 +261,5 @@ Live checks:
   owner's job book.
 - A ticket opened in Discord appears in `/admin` and on the opener's
   `/dashboard` after the bot writes it to MongoDB.
-- The bot's `/status`, `/stats`, `/site`, `/help`, and ticket panel work in the
-  guild.
+- The bot's `/status`, `/stats`, `/site`, `/ask`, `/brief`, `/help`, and ticket
+  panel work in the guild.

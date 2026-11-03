@@ -11,14 +11,15 @@ source of truth for the public status page; the bot reports to it.
 - **Library:** `discord.js` 14.28.0
 - **Language:** TypeScript, ESM (`"type": "module"`)
 - **Intents:** `Guilds` only
-- **State:** in memory, with ticket metadata rehydrated from channel topics
+- **State:** MongoDB ticket ledger when configured, with channel topics as the recovery source
 
 ## What it does
 
 | Area | Behavior |
 | --- | --- |
-| Public commands | `/status`, `/stats`, `/site`, `/help`, `/ticket` |
+| Public commands | `/status`, `/stats`, `/site`, `/ask`, `/brief`, `/help`, `/ticket` |
 | Owner commands | `/admin status`, `announce`, `presence`, `maintenance`, `sync`, `ticketpanel` |
+| AI bench | `/ask` answers studio questions; `/brief` turns a rough idea into a structured project brief. Powered by Groq; disabled cleanly when `GROQ_API_KEY` is absent. |
 | Tickets | Private channels, one open ticket per user, 30-second open cooldown, claim, close with confirmation, log, keep the record, staff delete with confirmation |
 | Presence | Five-state rotation every 25 seconds; website override; local owner override; maintenance idle state |
 | Heartbeat | Signed `POST` to `${SITE_URL}/api/bot/heartbeat` every 30 seconds |
@@ -146,6 +147,8 @@ Copy `.env.example` and fill every required value. Never commit real values.
 | `TICKET_LOG_CHANNEL_ID` | Optional | Closure, deletion, and failure notices. |
 | `STAFF_ROLE_IDS` | Recommended | Comma-separated role IDs that can see and claim tickets. Ticket opening refuses while empty. |
 | `TICKET_CATEGORY_ID` | Optional | Existing private category. When empty, the bot uses or creates `Tickets`. |
+| `GROQ_API_KEY` | Optional | Enables `/ask` and `/brief`. Leave empty to run the bot without AI. |
+| `GROQ_MODEL` | Optional | Groq model name. Defaults to `openai/gpt-oss-20b`. |
 | `PORT` | Optional | Health-server port. Defaults to `8080`. |
 
 `SITE_URL` and `BOT_HEARTBEAT_SECRET` must either both be real or both be
@@ -170,6 +173,8 @@ Put the same value in the bot host and in the website's environment.
 | `/status` | Maintenance state, gateway ping, uptime, member count, open tickets, commands served, site links |
 | `/stats` | Members, approximate present members, channels, roles, boosts, guild age, open tickets |
 | `/site` | Links to the website, dashboard, and status page |
+| `/ask` | Groq-powered answer about the studio, its services, or how a job starts |
+| `/brief` | Groq-powered private draft with the job, build shape, open questions, and a first move |
 | `/help` | Command index; includes owner commands only for the owner |
 | `/ticket` | Ephemeral ticket panel with an **Open a ticket** button |
 
@@ -405,6 +410,22 @@ docker run --rm --env-file .env -p 8080:8080 wrightyard-bot
 
 The image is multi-stage, runs as the non-root `node` user, installs production
 dependencies only in the final stage, and includes a health check.
+
+## Pterodactyl
+
+Use the packaged zip and the dedicated guide in
+[`README-PTERODACTYL.md`](./README-PTERODACTYL.md). In short:
+
+1. Create a Node.js server on Node 22.12+ with 1 GB RAM.
+2. Extract the zip into the server root so `package.json`, `dist/`, and
+   `start.sh` sit directly at the root.
+3. Create `.env` with the values from the environment table, including
+   `SITE_URL=https://wrightyard.vercel.app` and the exact website
+   `BOT_HEARTBEAT_SECRET`.
+4. Set the startup command to `sh start.sh` (or `node dist/index.js`).
+5. Start the server, run `node dist/deploy-commands.js` once if needed, then
+   verify `/status`, `/ask`, `/brief`, and the website heartbeat.
+6. Stop any old bot process first. One gateway process only.
 
 ## Railway
 

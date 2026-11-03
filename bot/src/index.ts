@@ -12,6 +12,7 @@ import { CooldownStore } from "./cooldowns.js";
 import { handleInteraction } from "./interactions/handler.js";
 import { loadCommands } from "./load-commands.js";
 import { Logger, serializeError } from "./logger.js";
+import { AIService } from "./services/ai.js";
 import { HeartbeatService } from "./services/heartbeat.js";
 import { startHealthServer, stopHealthServer } from "./services/health.js";
 import { PresenceService } from "./services/presence.js";
@@ -89,6 +90,14 @@ async function main(): Promise<void> {
     ledger,
     logger: logger.child("tickets"),
   });
+  const ai = new AIService(
+    { apiKey: config.groqApiKey, model: config.groqModel },
+    logger.child("ai"),
+  );
+  if (ai.enabled) {
+    logger.info("AI bench ready", { model: ai.modelName });
+  }
+
   const syncer = new CommandSyncer(client, config.guildId, commands, logger.child("commands"));
   const heartbeat = new HeartbeatService({
     client,
@@ -110,6 +119,7 @@ async function main(): Promise<void> {
     presence,
     heartbeat,
     tickets,
+    ai,
     syncer,
     commands,
     version,

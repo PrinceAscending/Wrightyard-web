@@ -18,6 +18,8 @@ export interface Config {
   readonly ticketCategoryId: string | null;
   readonly mongoUri: string | null;
   readonly mongoDb: string;
+  readonly groqApiKey: string | null;
+  readonly groqModel: string;
   readonly port: number;
   readonly nodeEnv: string;
 }
@@ -121,6 +123,27 @@ function parseMongoUri(raw: string | undefined, warnings: string[]): string | nu
   return value;
 }
 
+function parseGroqApiKey(raw: string | undefined, warnings: string[]): string | null {
+  const value = raw?.trim();
+  if (!value) {
+    warnings.push("GROQ_API_KEY is not set; /ask and /brief are disabled.");
+    return null;
+  }
+  if (value.includes("replace-with")) {
+    warnings.push("GROQ_API_KEY is still the example placeholder; AI commands are disabled.");
+    return null;
+  }
+  if (!value.startsWith("gsk_")) {
+    warnings.push("GROQ_API_KEY does not look like a Groq key; AI commands may fail.");
+  }
+  return value;
+}
+
+function parseGroqModel(raw: string | undefined): string {
+  const value = raw?.trim();
+  return value || "openai/gpt-oss-20b";
+}
+
 function parseStaffRoleIds(raw: string | undefined, warnings: string[]): string[] {
   const value = raw?.trim();
   if (!value) {
@@ -185,6 +208,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): LoadedConfig {
   const staffRoleIds = parseStaffRoleIds(env.STAFF_ROLE_IDS, warnings);
   const mongoUri = parseMongoUri(env.MONGODB_URI, warnings);
   const mongoDb = env.MONGODB_DB?.trim() || "wrightyard";
+  const groqApiKey = parseGroqApiKey(env.GROQ_API_KEY, warnings);
+  const groqModel = parseGroqModel(env.GROQ_MODEL);
 
   return {
     config: {
@@ -201,6 +226,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): LoadedConfig {
       ticketCategoryId,
       mongoUri,
       mongoDb,
+      groqApiKey,
+      groqModel,
       port: parsePort(env.PORT),
       nodeEnv: env.NODE_ENV?.trim() || "development",
     },

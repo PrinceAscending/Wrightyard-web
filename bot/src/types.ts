@@ -10,6 +10,7 @@ import type { CooldownStore } from "./cooldowns.js";
 import type { Logger } from "./logger.js";
 import type { BotState } from "./state.js";
 import type { CommandSyncer } from "./services/command-sync.js";
+import type { AIService } from "./services/ai.js";
 import type { HeartbeatService } from "./services/heartbeat.js";
 import type { PresenceService } from "./services/presence.js";
 import type { TicketService } from "./tickets/service.js";
@@ -37,6 +38,7 @@ export interface BotContext {
   readonly presence: PresenceService;
   readonly heartbeat: HeartbeatService;
   readonly tickets: TicketService;
+  readonly ai: AIService;
   readonly syncer: CommandSyncer;
   readonly commands: CommandRegistry;
   readonly version: string;
