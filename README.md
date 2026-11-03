@@ -19,6 +19,16 @@ open.
 - **Auth:** Discord OAuth2 (`identify` only), signed HTTP-only session cookie.
   Owner access is by Discord user ID, not role.
 
+## Deployment status
+
+- **Website:** live at https://wrightyard.vercel.app. Pushes to `main` deploy
+  production automatically.
+- **Bot:** code complete and locally verified; not yet hosted on a persistent
+  provider. See [Deploy the bot](#deploy-the-bot).
+- **Shared state:** MongoDB Atlas is live and shared by both processes.
+- **Follow-up:** rotate credentials that were shared outside the hosting
+  dashboards. See [Security notes](#security-notes).
+
 ## What is here
 
 | Path | Purpose |
