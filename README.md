@@ -1,0 +1,250 @@
+# Wrightyard
+
+[![CI](https://github.com/PrinceAscending/Wrightyard-web/actions/workflows/ci.yml/badge.svg)](https://github.com/PrinceAscending/Wrightyard-web/actions/workflows/ci.yml)
+
+**Production:** https://wrightyard.vercel.app
+
+The studio site, member gate, live yard report, and the bot that keeps the line
+open.
+
+- **Website:** Next.js 16, React 19, Motion, custom letterpress CSS. Deployed to
+  Vercel.
+- **Bot:** discord.js 14 gateway process. Deployed to a persistent host
+  (Railway, Fly, Render). Vercel functions cannot hold a 24/7 gateway
+  connection or rich presence.
+- **Shared state:** MongoDB Atlas. The site and bot share durable state for the
+  heartbeat, job book, ticket history, and dispatch archive. An in-memory
+  fallback keeps local work possible when MongoDB is unavailable, but it is not
+  shared between serverless instances.
+- **Auth:** Discord OAuth2 (`identify` only), signed HTTP-only session cookie.
+  Owner access is by Discord user ID, not role.
+
+## What is here
+
+| Path | Purpose |
+| --- | --- |
+| `app/page.tsx` | Homepage: job ticket, seal, work specimen, services, rates, brief builder, live band |
+| `app/login` | Discord gate |
+| `app/dashboard` | Signed-in member file, guild membership, live line, job book, ticket history, command index |
+| `app/admin` | Owner's bench: presence override, maintenance, announcements, job book, ticket ledger, command sync, audit marks |
+| `app/status` | Public live report: services, uptime, wave, ticket count, heartbeat sparkline |
+| `app/dispatch` | Public archive of owner announcements |
+| `app/api/auth/*` | OAuth login, callback, logout, session read |
+| `app/api/bot/heartbeat` | Signed HMAC heartbeat receiver, override delivery, command sync flag |
+| `app/api/briefs` | Public job-brief intake with validation, honeypot, and rate limits |
+| `app/api/admin/*` | Owner-only presence, maintenance, announce, sync, audit, brief, and ticket APIs |
+| `bot/` | Standalone discord.js gateway bot, commands, tickets, presence rotation, heartbeat sender, Mongo ticket ledger |
+| `lib/` | Auth, guards, Discord REST, Mongo store, briefs, dispatch, tickets, status assembly, validation, formatting |
+| `app/account.css` | Auth, dashboard, status, admin, loading, and responsive styles |
+
+## Local setup
+
+```powershell
+npm install
+Copy-Item .env.example .env.local
+# fill in the real values
+npm run dev
+```
+
+The bot has its own package and lockfile:
+
+```powershell
+cd bot
+npm install
+Copy-Item .env.example .env.local
+# fill in the real values
+npm run build
+npm run deploy-commands
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+### Required website env
+
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Public origin used for OAuth redirects and metadata. Must be exact. |
+| `DISCORD_CLIENT_ID` | OAuth application ID: `1566784935342252032` |
+| `DISCORD_CLIENT_SECRET` | OAuth client secret |
+| `DISCORD_TOKEN` | Bot token for REST calls (guild snapshot, member lookup, announcements) |
+| `DISCORD_GUILD_ID` | `1566778873985892442` |
+| `OWNER_ID` | `971329961313046578` — the only user allowed on `/admin` |
+| `ANNOUNCEMENTS_CHANNEL_ID` | `1566786878416486500` |
+| `AUTH_SECRET` | 32+ byte random secret for session signing |
+| `BOT_HEARTBEAT_SECRET` | 32+ byte random secret shared with the bot |
+| `MONGODB_URI` | MongoDB Atlas SRV connection string. Server-only; never commit it. |
+| `MONGODB_DB` | Database name, normally `wrightyard` |
+| `UPSTASH_REDIS_REST_URL` | Optional fallback only; MongoDB is primary |
+| `UPSTASH_REDIS_REST_TOKEN` | Optional Upstash fallback token |
+
+Generate secrets:
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+## Discord OAuth setup
+
+In the [Discord Developer Portal](https://discord.com/developers/applications)
+for the WrightForge application, open **OAuth2** and add both redirect URIs:
+
+1. `http://localhost:3000/api/auth/callback`
+2. `https://wrightyard.vercel.app/api/auth/callback`
+
+They must match exactly, including protocol and path. The login route requests
+the `identify` scope only. The callback exchanges the code, reads `/users/@me`,
+and signs a seven-day session.
+
+Production redirect URIs must be HTTPS. If the Vercel project ever receives a
+different domain, add that callback URI in Discord, update
+`NEXT_PUBLIC_SITE_URL` to the same origin, and redeploy.
+
+## Durable state: MongoDB Atlas
+
+1. Create a MongoDB Atlas cluster and a database user with `readWrite` on the
+   `wrightyard` database.
+2. Copy the SRV connection string into `MONGODB_URI` for both the website and the
+   bot. Set `MONGODB_DB=wrightyard`.
+3. Add the same variables in Vercel and on the bot host. Do not put the URI in a
+   `NEXT_PUBLIC_*` variable.
+4. Redeploy and open `/status`. The state store row should read
+   **Durable / MongoDB**.
+
+The app creates its indexes on first use. Collections:
+
+| Collection | Owner | Purpose |
+| --- | --- | --- |
+| `key_values` | Site | Heartbeat, overrides, maintenance, sync flag |
+| `counters` | Site | Rate limits with TTL indexes |
+| `lists` | Site | Heartbeat history and audit marks |
+| `briefs` | Site | Website job briefs and owner status |
+| `tickets` | Bot | Durable ticket history read by the site |
+| `announcements` | Site | Public dispatch archive |
+
+The bot writes ticket history directly to `tickets`; it never depends on the
+website being up to open, claim, close, or remove a ticket. If MongoDB is
+unavailable, the bot logs the failure, backs off for a minute, and keeps working
+from Discord channel topics. The website uses a thirty-second in-memory fallback
+for small state and reports the degraded backend on `/status`.
+
+## Product features
+
+- **Job briefs:** the homepage form files a brief in MongoDB, returns a
+  reference, and shows it on the member's file when they are signed in.
+- **Owner job book:** `/admin` filters briefs by status, exposes contact details
+  only to the owner, and moves a brief through New, Reviewing, Quoted, Won, or
+  Archived.
+- **Ticket ledger:** the bot writes openings, claims, closures, and removals to
+  MongoDB. `/admin` shows the desk history; `/dashboard` shows the member's own
+  tickets.
+- **Dispatch archive:** every announcement sent from `/admin` is also filed at
+  `/dispatch`. The Discord post and the public archive share the same text.
+
+## Deploy the website to Vercel
+
+Production is a Vercel project connected to this GitHub repository:
+
+- **Project:** `wrightyard`
+- **Production branch:** `main`
+- **URL:** `https://wrightyard.vercel.app`
+- **Framework preset:** Next.js
+- **Root directory:** repository root
+
+Every push to `main` creates a production deployment. Pull requests create
+preview deployments. Set every website environment variable above in
+**Project → Settings → Environment Variables** for Production, Preview, and
+Development. `NEXT_PUBLIC_SITE_URL` must be the final HTTPS origin.
+
+Initial setup:
+
+```powershell
+npx vercel login
+npx vercel link
+npx vercel git connect
+npx vercel --prod
+```
+
+After the first deploy:
+
+1. Add `https://wrightyard.vercel.app/api/auth/callback` in Discord.
+2. Confirm `NEXT_PUBLIC_SITE_URL=https://wrightyard.vercel.app`.
+3. Redeploy if either value changed.
+4. Test sign-in, `/dashboard`, `/admin`, and `/status`.
+
+### Continuous integration
+
+`.github/workflows/ci.yml` runs on every push and pull request:
+
+- Site: install, typecheck, production build.
+- Bot: install, typecheck, build.
+
+The workflow uses placeholder environment values. Real values live only in
+Vercel and the bot host.
+
+## Deploy the bot
+
+The bot must run on a persistent host. Railway is the shortest path:
+
+1. Create a Railway project from this repository.
+2. Set the service root to `bot/` (or use the included Dockerfile).
+3. Add the bot environment variables from `bot/.env.example`.
+4. Set `SITE_URL` to the production site origin.
+5. Set `BOT_HEARTBEAT_SECRET` to the exact same value used by Vercel.
+6. Deploy. Check `GET /health`.
+7. Run the command deploy once: `npm run deploy-commands` locally or as a
+   one-off service command.
+8. Confirm the site's `/status` page receives heartbeats and the bot's rich
+   presence rotates.
+
+Fly.io and Render work the same way. `bot/Dockerfile`, `bot/railway.json`, and
+`bot/fly.toml` are included.
+
+The owner can also queue a command re-registration from `/admin` using
+**Queue command sync**; the bot picks it up on its next heartbeat.
+
+## Security notes
+
+- Never commit `.env.local`, bot tokens, client secrets, heartbeat secrets, or
+  `MONGODB_URI`. The URI contains a database password.
+- Use a dedicated MongoDB user with `readWrite` on `wrightyard`, not an Atlas
+  organization owner.
+- Rotate the Discord bot token, OAuth client secret, and MongoDB password
+  whenever a credential has been shared outside the hosting dashboards. Update
+  Vercel and the bot host together after rotation.
+- Owner checks are by Discord user ID (`OWNER_ID`) on every page and API call.
+  Server administrator does not imply owner.
+- Admin APIs require a same-origin request, an owner session, and rate limits.
+- Heartbeats require an HMAC-SHA256 signature over the exact raw body.
+- The site sends `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+  HSTS, and a restrictive permissions policy.
+
+## Verification
+
+```powershell
+npm run typecheck
+npm run build
+
+cd bot
+npm run typecheck
+npm run build
+```
+
+Live checks:
+
+- `GET /api/status` returns a coherent report.
+- `POST /api/bot/heartbeat` rejects a bad signature with 401 and accepts a
+  correctly signed body.
+- `GET /status` renders the report and refreshes without a full reload.
+- Discord sign-in returns to `/dashboard` (requires registered redirect URIs).
+- `/dashboard` and `/admin` redirect to `/login` when signed out.
+- `/admin` returns 404 for a signed-in non-owner.
+- Owner presence and maintenance overrides are delivered on the next heartbeat.
+- An announcement posts to `#announcements` through Discord REST and appears on
+  `/dispatch`.
+- A job brief submitted from `/#brief` returns a reference and appears in the
+  owner's job book.
+- A ticket opened in Discord appears in `/admin` and on the opener's
+  `/dashboard` after the bot writes it to MongoDB.
+- The bot's `/status`, `/stats`, `/site`, `/help`, and ticket panel work in the
+  guild.
