@@ -66,18 +66,19 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-The bot is a separate repository with its own package and lockfile:
+The bot is a separate repository and ships a self-contained `index.js`:
 
 ```powershell
 git clone https://github.com/PrinceAscending/Wrightyard-bot.git bot
 cd bot
-npm install
 Copy-Item .env.example .env.local
 # fill in the real values
-npm run build
-npm run deploy-commands
-npm run dev
+node index.js
 ```
+
+For source development, use `npm install`, `npm run build`, and `npm run dev`.
+Register commands from the release with `node index.js --deploy-commands`, or
+from a source checkout with `npm run deploy-commands`.
 
 Open `http://localhost:3000`.
 
@@ -198,26 +199,32 @@ After the first deploy:
 `.github/workflows/ci.yml` runs on every push and pull request for the site:
 install, typecheck, and production build. The bot has its own CI in the
 [`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot) repository:
-install, typecheck, build, and the smoke test.
+install, version check, typecheck, build, smoke test, and the standalone bundle
+check.
 
 The workflow uses placeholder environment values. Real values live only in
 Vercel and the bot host.
 
 ## Deploy the bot
 
-The bot must run on a persistent Linux host. Clone
-[`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot), then:
+The bot must run on a persistent Linux host. The repository ships a
+self-contained `index.js`, so the host runs one command with no install or build
+step:
 
 1. Install Node.js 22.12+ on the server.
-2. Clone the repository to `/opt/wrightyard-bot` and run `npm ci && npm run build`.
+2. Clone [`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot)
+   to `/opt/wrightyard-bot`, or extract the release zip there. The root must
+   contain `index.js` and `deploy/wrightyard-bot.service`.
 3. Put the environment in `/etc/wrightyard-bot/wrightyard-bot.env` (mode `640`),
    including `SITE_URL=https://wrightyard.vercel.app`, the exact Vercel
-   `BOT_HEARTBEAT_SECRET`, and `GROQ_API_KEY` for `/ask` and `/brief`.
+   `BOT_HEARTBEAT_SECRET`, the website's `MONGODB_URI` / `MONGODB_DB=wrightyard`,
+   and `GROQ_API_KEY` for `/ask` and `/brief`.
 4. Install the included
    [`deploy/wrightyard-bot.service`](https://github.com/PrinceAscending/Wrightyard-bot/blob/main/deploy/wrightyard-bot.service)
-   unit and run `systemctl enable --now wrightyard-bot`.
-5. Register commands once with
-   `WRIGHTYARD_ENV_FILE=/etc/wrightyard-bot/wrightyard-bot.env npm run deploy-commands`.
+   unit and run `systemctl enable --now wrightyard-bot`. Its `ExecStart` is
+   `/usr/bin/node index.js`.
+5. Register commands once:
+   `sudo -u wrightyard env WRIGHTYARD_ENV_FILE=/etc/wrightyard-bot/wrightyard-bot.env node /opt/wrightyard-bot/index.js --deploy-commands`.
 6. Check `GET /health` and the journal for `Gateway ready`,
    `Community systems ready`, and `Website heartbeat accepted`.
 7. Confirm the site's `/status` page receives heartbeats and the bot's rich
@@ -260,8 +267,11 @@ The bot's checks run in its own repository:
 ```powershell
 cd bot
 npm run typecheck
+npm run check-version
 npm run build
 npm run smoke
+npm run bundle
+npm run bundle:check
 ```
 
 Live checks:
