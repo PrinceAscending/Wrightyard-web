@@ -1,6 +1,9 @@
 node_modules
 .next
 out
+
+# The bot is its own repository: https://github.com/PrinceAscending/Wrightyard-bot
+/bot/
 .env
 .env.*
 !.env.example

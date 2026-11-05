@@ -3,14 +3,17 @@
 [![CI](https://github.com/PrinceAscending/Wrightyard-web/actions/workflows/ci.yml/badge.svg)](https://github.com/PrinceAscending/Wrightyard-web/actions/workflows/ci.yml)
 
 **Production:** https://wrightyard.vercel.app
+**Bot repository:** https://github.com/PrinceAscending/Wrightyard-bot
 
-The studio site, member gate, live yard report, and the bot that keeps the line
-open.
+The studio site, member gate, live yard report, and the Discord bot that keeps
+the line open.
 
 - **Website:** Next.js 16, React 19, Motion, custom letterpress CSS. Deployed to
   Vercel.
-- **Bot:** discord.js 14 gateway process. Deployed to a persistent host
-  (Pterodactyl, Railway, Fly, Render). Vercel functions cannot hold a 24/7
+- **Bot:** a standalone discord.js 14 gateway process in
+  [`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot).
+  Hosted on a persistent Linux machine under systemd (Docker, Railway, Fly,
+  Render, and Pterodactyl also work). Vercel functions cannot hold a 24/7
   gateway connection or rich presence. `/ask` and `/brief` use Groq when
   `GROQ_API_KEY` is set.
 - **Shared state:** MongoDB Atlas. The site and bot share durable state for the
@@ -24,9 +27,14 @@ open.
 
 - **Website:** live at https://wrightyard.vercel.app. Pushes to `main` deploy
   production automatically.
-- **Bot:** code complete, AI commands added, and packaged for Pterodactyl. The
-  local instance is the current bridge until the Pterodactyl server starts. See
+- **Bot:** code complete, with auto-role, the XP ladder, AI commands, and the
+  website heartbeat. Published to
+  [`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot). The
+  local instance is the bridge until the persistent host starts. See
   [Deploy the bot](#deploy-the-bot).
+- **Discord server:** 36 text channels, 9 voice rooms, 8 categories, and a
+  staff/level role hierarchy. The map and pinned-message snapshot live in
+  `docs/`.
 - **Shared state:** MongoDB Atlas is live and shared by both processes.
 - **Follow-up:** rotate credentials that were shared outside the hosting
   dashboards. See [Security notes](#security-notes).
@@ -45,7 +53,7 @@ open.
 | `app/api/bot/heartbeat` | Signed HMAC heartbeat receiver, override delivery, command sync flag |
 | `app/api/briefs` | Public job-brief intake with validation, honeypot, and rate limits |
 | `app/api/admin/*` | Owner-only presence, maintenance, announce, sync, audit, brief, and ticket APIs |
-| `bot/` | Standalone discord.js gateway bot, commands, Groq `/ask` and `/brief`, tickets, presence rotation, heartbeat sender, Mongo ticket ledger |
+| `bot/` | Local checkout of the separate [`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot) repository: gateway, commands, auto-role, XP ladder, tickets, presence, heartbeat, Mongo ledger |
 | `lib/` | Auth, guards, Discord REST, Mongo store, briefs, dispatch, tickets, status assembly, validation, formatting |
 | `app/account.css` | Auth, dashboard, status, admin, loading, and responsive styles |
 
@@ -58,9 +66,10 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-The bot has its own package and lockfile:
+The bot is a separate repository with its own package and lockfile:
 
 ```powershell
+git clone https://github.com/PrinceAscending/Wrightyard-bot.git bot
 cd bot
 npm install
 Copy-Item .env.example .env.local
@@ -186,34 +195,39 @@ After the first deploy:
 
 ### Continuous integration
 
-`.github/workflows/ci.yml` runs on every push and pull request:
-
-- Site: install, typecheck, production build.
-- Bot: install, typecheck, build.
+`.github/workflows/ci.yml` runs on every push and pull request for the site:
+install, typecheck, and production build. The bot has its own CI in the
+[`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot) repository:
+install, typecheck, build, and the smoke test.
 
 The workflow uses placeholder environment values. Real values live only in
 Vercel and the bot host.
 
 ## Deploy the bot
 
-The bot must run on a persistent host. Pterodactyl is the current path:
+The bot must run on a persistent Linux host. Clone
+[`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot), then:
 
-1. Create a Node.js server on Node 22.12+ with 1 GB RAM.
-2. Extract `wrightyard-bot-pterodactyl.zip` into the server root.
-3. Create `.env` from the values in `bot/.env.example`, including
-   `SITE_URL=https://wrightyard.vercel.app`, the exact Vercel
+1. Install Node.js 22.12+ on the server.
+2. Clone the repository to `/opt/wrightyard-bot` and run `npm ci && npm run build`.
+3. Put the environment in `/etc/wrightyard-bot/wrightyard-bot.env` (mode `640`),
+   including `SITE_URL=https://wrightyard.vercel.app`, the exact Vercel
    `BOT_HEARTBEAT_SECRET`, and `GROQ_API_KEY` for `/ask` and `/brief`.
-4. Set the startup command to `sh start.sh` (or `node dist/index.js`).
-5. Start the server. Check `GET /health` and the console for
-   `Gateway ready` and `Website heartbeat accepted`.
-6. Run `node dist/deploy-commands.js` once if the commands are missing.
+4. Install the included
+   [`deploy/wrightyard-bot.service`](https://github.com/PrinceAscending/Wrightyard-bot/blob/main/deploy/wrightyard-bot.service)
+   unit and run `systemctl enable --now wrightyard-bot`.
+5. Register commands once with
+   `WRIGHTYARD_ENV_FILE=/etc/wrightyard-bot/wrightyard-bot.env npm run deploy-commands`.
+6. Check `GET /health` and the journal for `Gateway ready`,
+   `Community systems ready`, and `Website heartbeat accepted`.
 7. Confirm the site's `/status` page receives heartbeats and the bot's rich
    presence rotates.
 
-The full Pterodactyl walkthrough is in
-[`bot/README-PTERODACTYL.md`](bot/README-PTERODACTYL.md). Railway, Fly.io, and
-Render work the same way; `bot/Dockerfile`, `bot/railway.json`, and
-`bot/fly.toml` are included.
+The full Linux walkthrough, plus Docker, Railway, Fly.io, Render, and
+Pterodactyl notes, is in the
+[bot README](https://github.com/PrinceAscending/Wrightyard-bot#deployment).
+`Dockerfile`, `docker-compose.yml`, `railway.json`, and `fly.toml` are included
+in the bot repository.
 
 The owner can also queue a command re-registration from `/admin` using
 **Queue command sync**; the bot picks it up on its next heartbeat.
@@ -239,10 +253,15 @@ The owner can also queue a command re-registration from `/admin` using
 ```powershell
 npm run typecheck
 npm run build
+```
 
+The bot's checks run in its own repository:
+
+```powershell
 cd bot
 npm run typecheck
 npm run build
+npm run smoke
 ```
 
 Live checks:
@@ -261,5 +280,7 @@ Live checks:
   owner's job book.
 - A ticket opened in Discord appears in `/admin` and on the opener's
   `/dashboard` after the bot writes it to MongoDB.
-- The bot's `/status`, `/stats`, `/site`, `/ask`, `/brief`, `/help`, and ticket
-  panel work in the guild.
+- The bot's `/status`, `/stats`, `/site`, `/rank`, `/leaderboard`, `/ask`,
+  `/brief`, `/help`, and ticket panel work in the guild.
+- A new member receives **Crew** and the welcome card; eligible messages earn XP;
+  level roles arrive at 5, 15, 30, and 50.

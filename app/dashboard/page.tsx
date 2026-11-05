@@ -8,7 +8,7 @@ import { listTicketsForUser } from "@/lib/tickets";
 import { briefStatusLabels } from "@/lib/brief-options";
 import { formatCount, formatDate, formatPing, formatUptime } from "@/lib/format";
 import { publicCommands } from "@/lib/bot-commands";
-import { site } from "@/lib/site";
+import { channelUrl, site } from "@/lib/site";
 import SignOutButton from "@/components/SignOutButton";
 import { ArrowUpRight, DiscordMark, Wordmark } from "@/components/marks";
 
@@ -234,13 +234,13 @@ export default async function DashboardPage() {
               </li>
               <li>
                 <a
-                  href="https://discord.com/channels/1566778873985892442/1566786873269952562"
+                  href={channelUrl(site.rulesChannelId)}
                   target="_blank"
                   rel="noreferrer"
                 >
                   <span>02</span>
                   <strong>Read the rules</strong>
-                  <em>Eight rules, written plainly, kept short.</em>
+                  <em>Nine rules, written plainly, kept short.</em>
                   <ArrowUpRight />
                 </a>
               </li>
@@ -268,6 +268,15 @@ export default async function DashboardPage() {
                 </li>
               ))}
             </ul>
+            <p className="dash-note">
+              You get <strong>Crew</strong> on entry. Talk in the yard to climb{" "}
+              {site.levelRoles.map((role) => role.name).join(" → ")}. The full
+              ladder is in the{" "}
+              <a href={channelUrl(site.rolesChannelId)} target="_blank" rel="noreferrer">
+                role ledger
+              </a>
+              .
+            </p>
             {owner ? (
               <p className="dash-note">
                 Owner commands are listed on the{" "}

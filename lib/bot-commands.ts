@@ -10,18 +10,38 @@ export const publicCommands = [
     scope: "Everyone",
   },
   {
-    name: "/ticket",
-    description: "Open a private ticket with the crew.",
+    name: "/site",
+    description: "Links to the studio, dashboard, status page, and Discord.",
     scope: "Everyone",
   },
   {
-    name: "/site",
-    description: "Links to the site, dashboard, and public status page.",
+    name: "/rank",
+    description: "Your level, XP progress, message count, and standing.",
+    scope: "Everyone",
+  },
+  {
+    name: "/leaderboard",
+    description: "The top ten of the yard XP ledger.",
+    scope: "Everyone",
+  },
+  {
+    name: "/ask",
+    description: "Ask the yard about the studio, services, or process.",
+    scope: "Everyone",
+  },
+  {
+    name: "/brief",
+    description: "Turn a rough idea into a private project brief.",
     scope: "Everyone",
   },
   {
     name: "/help",
     description: "The command index, written for humans.",
+    scope: "Everyone",
+  },
+  {
+    name: "/ticket",
+    description: "Open a private ticket with the crew.",
     scope: "Everyone",
   },
 ];
