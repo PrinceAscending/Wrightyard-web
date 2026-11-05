@@ -114,8 +114,9 @@ export default function Specimen() {
             ))}
           </ul>
           <p className="specimen__note">
-            Roles arrive through native onboarding. No reaction roles, no extra
-            bot required.
+            Crew is automatic on entry. The rest arrive through native
+            onboarding, and the level ladder is earned in the yard. No reaction
+            roles, no extra bot required.
           </p>
         </div>
       </div>
