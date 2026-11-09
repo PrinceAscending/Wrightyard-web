@@ -46,34 +46,52 @@ export function discordConfigured() {
   return Boolean(token() && guildId());
 }
 
+const MAX_RATE_LIMIT_RETRIES = 2;
+const MAX_RETRY_WAIT_MS = 5_000;
+
+function retryAfterMs(response: Response, body: { retry_after?: number } | null): number {
+  const fromBody = typeof body?.retry_after === "number" ? body.retry_after * 1_000 : Number.NaN;
+  const header = response.headers.get("retry-after");
+  const fromHeader = header === null ? Number.NaN : Number(header) * 1_000;
+  const wait = Number.isFinite(fromBody)
+    ? fromBody
+    : Number.isFinite(fromHeader)
+      ? fromHeader
+      : 1_000;
+  return Math.min(Math.max(wait, 250), MAX_RETRY_WAIT_MS);
+}
+
 async function discordFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const authToken = token();
   if (!authToken) throw new Error("DISCORD_TOKEN is not configured.");
 
-  const response = await fetch(`https://discord.com/api/v10${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bot ${authToken}`,
-      "User-Agent": "WrightyardSite/1.0",
-      ...(init?.headers ?? {}),
-    },
-    cache: "no-store",
-    signal: AbortSignal.timeout(12_000),
-  });
+  for (let attempt = 0; ; attempt += 1) {
+    const response = await fetch(`https://discord.com/api/v10${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bot ${authToken}`,
+        "User-Agent": "WrightyardSite/1.1.0",
+        ...(init?.headers ?? {}),
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+    });
 
-  if (response.status === 429) {
-    const body = (await response.json().catch(() => null)) as { retry_after?: number } | null;
-    const wait = Math.min(Math.max((body?.retry_after ?? 1) * 1000, 250), 5_000);
-    await new Promise((resolve) => setTimeout(resolve, wait));
-    return discordFetch<T>(path, init);
+    if (response.status === 429 && attempt < MAX_RATE_LIMIT_RETRIES) {
+      const body = (await response.json().catch(() => null)) as {
+        retry_after?: number;
+      } | null;
+      await new Promise((resolve) => setTimeout(resolve, retryAfterMs(response, body)));
+      continue;
+    }
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new Error(`Discord API ${response.status}: ${text.slice(0, 240)}`);
+    }
+
+    return (await response.json()) as T;
   }
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`Discord API ${response.status}: ${text.slice(0, 240)}`);
-  }
-
-  return (await response.json()) as T;
 }
 
 export async function getGuildSnapshot(): Promise<GuildSnapshot | null> {
