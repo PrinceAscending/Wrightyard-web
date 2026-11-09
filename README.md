@@ -27,11 +27,9 @@ the line open.
 
 - **Website:** live at https://wrightyard.vercel.app. Pushes to `main` deploy
   production automatically.
-- **Bot:** code complete, with auto-role, the XP ladder, AI commands, and the
-  website heartbeat. Published to
-  [`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot). The
-  local instance is the bridge until the persistent host starts. See
-  [Deploy the bot](#deploy-the-bot).
+- **Bot:** live on a persistent Pterodactyl host with a single gateway process:
+  auto-role, the XP ladder, AI commands, and the signed website heartbeat.
+  Source: [`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot).
 - **Discord server:** 36 text channels, 9 voice rooms, 8 categories, and a
   staff/level role hierarchy. The map and pinned-message snapshot live in
   `docs/`.
@@ -211,7 +209,7 @@ The bot must run on a persistent Linux host. The repository ships a
 self-contained `index.js`, so the host runs one command with no install or build
 step:
 
-1. Install Node.js 22.12+ on the server.
+1. Install Node.js 20.19+ on the server (Node 22 LTS recommended).
 2. Clone [`Wrightyard-bot`](https://github.com/PrinceAscending/Wrightyard-bot)
    to `/opt/wrightyard-bot`, or extract the release zip there. The root must
    contain `index.js` and `deploy/wrightyard-bot.service`.
