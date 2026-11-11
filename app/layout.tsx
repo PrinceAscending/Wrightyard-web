@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Archivo, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import "./account.css";
+import "./upgrade.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ScrollProgress from "@/components/ScrollProgress";
 import { site } from "@/lib/site";
 
 const display = Fraunces({
@@ -74,6 +76,7 @@ export default function RootLayout({
         <a className="skip-link" href="#main">
           Skip to content
         </a>
+        <ScrollProgress />
         <Header />
         <main id="main">{children}</main>
         <Footer />

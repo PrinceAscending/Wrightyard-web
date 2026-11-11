@@ -4,6 +4,11 @@ import Seal from "@/components/Seal";
 import Specimen from "@/components/Specimen";
 import BriefBuilder from "@/components/BriefBuilder";
 import LiveBand from "@/components/LiveBand";
+import HeroRig from "@/components/HeroRig";
+import ServicePlates from "@/components/ServicePlates";
+import ProcessRail from "@/components/ProcessRail";
+import ScopeDial from "@/components/ScopeDial";
+import YardRooms from "@/components/YardRooms";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -21,76 +26,6 @@ const capabilities = [
   { number: "02", name: "Telegram bots", note: "Automation, payments, tools" },
   { number: "03", name: "Websites", note: "Landing pages, dashboards, stores" },
   { number: "04", name: "Managed hosting", note: "Deploy, monitor, fix, repeat" },
-];
-
-const services = [
-  {
-    number: "01",
-    name: "Discord bots",
-    description:
-      "Moderation, tickets, onboarding, economy, integrations, custom commands. Built to live in the room, not interrupt it.",
-    tags: ["Moderation", "Tickets", "Onboarding", "Integrations"],
-  },
-  {
-    number: "02",
-    name: "Telegram bots",
-    description:
-      "Automation, payments, notifications, community tools. Quiet when it should be, loud when it matters.",
-    tags: ["Automation", "Payments", "Notifications"],
-  },
-  {
-    number: "03",
-    name: "Websites",
-    description:
-      "Landing pages, dashboards, storefronts, portfolios. Fast by default, accessible by default.",
-    tags: ["Landing", "Dashboard", "Storefront"],
-  },
-  {
-    number: "04",
-    name: "Managed hosting",
-    description:
-      "We deploy it, watch it, patch it, and fix it before you notice. Or hand you the keys.",
-    tags: ["Deploys", "Monitoring", "Uptime"],
-  },
-];
-
-const process = [
-  {
-    number: "01",
-    name: "Brief",
-    body: "Tell us what is breaking, missing, or taking too long. A conversation, not a form.",
-  },
-  {
-    number: "02",
-    name: "Scope",
-    body: "We write down what gets built, what it costs, and when it lands. You approve before we start.",
-  },
-  {
-    number: "03",
-    name: "Build",
-    body: "Small, visible steps. You see the work as it happens, not a reveal at the end.",
-  },
-  {
-    number: "04",
-    name: "Keep",
-    body: "Handoff with docs, or we stay on and run it. Either way, it keeps working.",
-  },
-];
-
-const rateFactors = [
-  ["Scope", "One bot or a system."],
-  ["Integrations", "Payments, APIs, dashboards."],
-  ["Hosting", "Managed or handoff."],
-  ["Timeline", "Standard or expedited."],
-];
-
-const rooms = [
-  { mark: "⌁", name: "The Workshop", note: "code help, build logs" },
-  { mark: "✦", name: "The Front Desk", note: "services, quotes, client work" },
-  { mark: "❀", name: "The Main Deck", note: "introductions, general" },
-  { mark: "♡", name: "The Rec Room", note: "games, lobbies, bad takes" },
-  { mark: "♫", name: "The Radio Room", note: "music, streams, clips" },
-  { mark: "⊹", name: "The Break Room", note: "off topic, after hours" },
 ];
 
 const stats = [
@@ -126,6 +61,7 @@ export default function Home() {
       />
 
       <section className="hero" aria-labelledby="hero-title">
+        <HeroRig />
         <div className="hero__crop hero__crop--tl" aria-hidden="true" />
         <div className="hero__crop hero__crop--br" aria-hidden="true" />
 
@@ -138,9 +74,9 @@ export default function Home() {
             </div>
 
             <h1 className="hero__title" id="hero-title">
-              <span>The quiet</span>
-              <span>machinery</span>
-              <span>behind loud</span>
+              <span>The quiet </span>
+              <span>machinery </span>
+              <span>behind loud </span>
               <span>communities.</span>
             </h1>
 
@@ -247,9 +183,8 @@ export default function Home() {
                 <h2 id="work-title">A community built like a place.</h2>
               </div>
               <p className="section-head__lede">
-                Wrightyard HQ is the studio&apos;s own Discord: 29 text
-                channels, seven voice rooms, three onboarding prompts, and one
-                bot. Designed and shipped in a single pass.
+                Wrightyard HQ is the studio&apos;s own Discord: 29 text channels,
+                seven voice rooms, one bot. Designed and shipped in one pass.
               </p>
             </div>
           </Reveal>
@@ -286,28 +221,17 @@ export default function Home() {
                 <h2 id="services-title">Four kinds of work. One standard.</h2>
               </div>
               <p className="section-head__lede">
-                Tell us what you need. We scope it, quote it, build it, and keep
-                it running. The work is custom, the process is not.
+                Custom work, written scope, fixed quote. No meter running in the
+                background.
               </p>
             </div>
           </Reveal>
 
-          <div className="ledger">
-            {services.map((service) => (
-              <article className="ledger__row" key={service.number}>
-                <span className="ledger__number">{service.number}</span>
-                <h3 className="ledger__name">{service.name}</h3>
-                <p className="ledger__body">{service.description}</p>
-                <ul className="ledger__tags" aria-label={`${service.name} capabilities`}>
-                  {service.tags.map((tag) => (
-                    <li key={tag}>{tag}</li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
+          <Reveal delay={0.06}>
+            <ServicePlates />
+          </Reveal>
 
-          <p className="ledger__note">
+          <p className="section-note">
             Every job starts with a written scope. No exceptions.
             <a className="text-link" href="#brief">
               Start a job
@@ -318,29 +242,20 @@ export default function Home() {
       </section>
 
       <section className="section process" id="process" aria-labelledby="process-title">
-        <div className="shell">
+        <div className="shell process__layout">
           <Reveal>
-            <div className="section-head section-head--split">
-              <div>
-                <p className="kicker">How a job runs</p>
-                <h2 id="process-title">Four steps. No reveal at the end.</h2>
-              </div>
-              <p className="section-head__lede">
-                You will know what is being built, what it costs, and when it
-                lands before anyone starts typing.
+            <div className="process__intro">
+              <p className="kicker">How a job runs</p>
+              <h2 id="process-title">Four steps. No reveal at the end.</h2>
+              <p>
+                You know the build, the price, and the date before anyone starts
+                typing.
               </p>
+              <p className="process__stamp">Scope first</p>
             </div>
           </Reveal>
 
-          <ol className="process__grid">
-            {process.map((step) => (
-              <li className="process__step" key={step.number}>
-                <span className="process__number">{step.number}</span>
-                <h3>{step.name}</h3>
-                <p>{step.body}</p>
-              </li>
-            ))}
-          </ol>
+          <ProcessRail />
         </div>
       </section>
 
@@ -355,34 +270,19 @@ export default function Home() {
                 The price is the scope.
               </h2>
               <p>
-                Every build is quoted in writing before work starts. You get a
-                fixed price and a delivery date, not an hourly meter running in
-                the background.
+                Every build is quoted in writing before work starts. Fixed price,
+                fixed date, no hourly meter.
               </p>
+              <div className="rates__facts" aria-label="How the quote is set">
+                <span>Written scope</span>
+                <span>Fixed price</span>
+                <span>No surprise invoices</span>
+              </div>
             </div>
           </Reveal>
 
           <Reveal delay={0.08}>
-            <div className="rates__detail">
-              <p className="rates__label">Four things move the number</p>
-              <ol className="rates__list">
-                {rateFactors.map(([name, note], index) => (
-                  <li key={name}>
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <strong>{name}</strong>
-                    <em>{note}</em>
-                  </li>
-                ))}
-              </ol>
-              <p className="rates__plain">
-                No hidden numbers. No surprise invoices. If the scope changes,
-                the quote changes before the work does.
-              </p>
-              <a className="button" href="#brief">
-                Get a written quote
-                <ArrowUpRight />
-              </a>
-            </div>
+            <ScopeDial />
           </Reveal>
         </div>
       </section>
@@ -392,15 +292,12 @@ export default function Home() {
           <Reveal>
             <div className="receipts__copy">
               <p className="kicker">Receipts</p>
-              <h2 id="receipts-title">We&apos;d rather show you an empty page.</h2>
+              <h2 id="receipts-title">The first receipt is still blank.</h2>
               <p>
-                No reviews yet. We would rather show you nothing than invent a
-                quote. The first receipts will be posted here exactly as they
-                arrive, good or bad.
+                No reviews yet. We would rather show an empty page than invent a
+                quote. The first goes up exactly as it arrives.
               </p>
-              <p className="receipts__note">
-                If we build it, the review goes up. If it stings, it stays up.
-              </p>
+              <p className="receipts__note">If it stings, it stays.</p>
             </div>
           </Reveal>
 
@@ -452,9 +349,8 @@ export default function Home() {
               <p className="kicker kicker--light">After hours</p>
               <h2 id="yard-title">The yard is also a room.</h2>
               <p>
-                Between jobs, the Discord stays open: code help, build logs,
-                music, games, streams. Twenty-nine channels, seven rooms, one
-                bot. Walk in.
+                Between jobs, the Discord stays open: build logs, code help,
+                music, games. Twenty-nine channels, one door.
               </p>
               <div className="yard__actions">
                 <a className="button button--paper" href={site.invite} target="_blank" rel="noreferrer">
@@ -468,19 +364,7 @@ export default function Home() {
           </Reveal>
 
           <Reveal delay={0.08}>
-            <ul className="room-list">
-              {rooms.map((room) => (
-                <li key={room.name}>
-                  <span className="room-list__mark" aria-hidden="true">
-                    {room.mark}
-                  </span>
-                  <span>
-                    <strong>{room.name}</strong>
-                    <em>{room.note}</em>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <YardRooms />
           </Reveal>
         </div>
       </section>
@@ -493,7 +377,7 @@ export default function Home() {
               <h2 id="brief-title">Bring us the thing.</h2>
               <p>
                 Tell us what you&apos;re building. We reply with a scope, a
-                price, and a date. If it is not a fit, we will say so.
+                price, and a date. If it is not a fit, we say so.
               </p>
               <p className="brief__aside">
                 <Asterisk />
